@@ -13,6 +13,7 @@ class MonitoringService(QThread):
     new_projects_found = pyqtSignal(list)
     error_occurred = pyqtSignal(str)
     status_updated = pyqtSignal(str)
+    all_projects_updated = pyqtSignal(list)  # Все проекты для обновления карточек
 
     def __init__(
         self,
@@ -44,6 +45,10 @@ class MonitoringService(QThread):
                 html = self._fetch_with_retry()
                 if html and not self._stop_flag:
                     projects = self.parser.parse_projects(html)
+
+                    # Отправляем все проекты для обновления карточек
+                    self.all_projects_updated.emit(projects)
+
                     new_projects = self._detect_new_projects(projects)
 
                     if new_projects:

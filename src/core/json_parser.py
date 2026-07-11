@@ -79,20 +79,45 @@ class KworkJSONParser:
                 # URL проекта
                 url = f"https://kwork.ru/projects/{project_id}"
 
-                # Цена
-                price = self._extract_price(item)
+                # Цены
+                price = self._extract_price(item, 'price')
+                price_limit = self._extract_price(item, 'priceLimit')
 
-                # Описание
-                description = item.get('description') or item.get('desc', '')
-                if description and len(description) > 100:
-                    description = description[:100] + '...'
+                # Описание (полное и короткое)
+                full_description = item.get('description') or item.get('desc', '')
+                description = full_description[:100] + '...' if len(full_description) > 100 else full_description
+
+                # Информация о заказчике
+                payer_username = None
+                payer_stats = None
+                if 'payer' in item and isinstance(item['payer'], dict):
+                    payer = item['payer']
+                    payer_username = payer.get('username', '')
+
+                    # Собираем статистику
+                    stats_parts = []
+                    if 'wantCount' in payer:
+                        stats_parts.append(f"Проектов: {payer['wantCount']}")
+                    if 'hiredPercent' in payer:
+                        stats_parts.append(f"Нанято: {payer['hiredPercent']}%")
+                    payer_stats = ' | '.join(stats_parts) if stats_parts else None
+
+                # Время и предложения
+                time_left = item.get('timeLeftFormatted') or item.get('timeLeft', '')
+                offers_count = item.get('offersCount', 0)
 
                 project = Project(
                     id=project_id,
                     title=title,
                     url=url,
                     price=price,
-                    description=description
+                    price_limit=price_limit,
+                    description=description,
+                    full_description=full_description,
+                    payer_username=payer_username,
+                    payer_stats=payer_stats,
+                    time_left=time_left,
+                    offers_count=offers_count
                 )
 
                 projects.append(project)
@@ -103,17 +128,12 @@ class KworkJSONParser:
 
         return projects
 
-    def _extract_price(self, item: dict) -> Optional[str]:
-        """Извлекает цену из разных полей"""
-        # Разные возможные названия полей с ценой
-        price_fields = ['price', 'budget', 'price_limit', 'volume']
-
-        for field in price_fields:
-            if field in item and item[field]:
-                price = item[field]
-                if isinstance(price, (int, float)):
-                    return f"{int(price)} ₽"
-                elif isinstance(price, str):
-                    return f"{price} ₽"
-
+    def _extract_price(self, item: dict, field_name: str) -> Optional[str]:
+        """Извлекает цену из указанного поля"""
+        if field_name in item and item[field_name]:
+            price = item[field_name]
+            if isinstance(price, (int, float)):
+                return f"{int(price)} ₽"
+            elif isinstance(price, str):
+                return f"{price} ₽"
         return None

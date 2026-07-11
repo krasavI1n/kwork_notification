@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLineEdit, QPushButton, QListWidget, QLabel, QListWidgetItem
+    QLineEdit, QPushButton, QLabel, QScrollArea
 )
 from PyQt5.QtCore import Qt, QDateTime
 from PyQt5.QtGui import QFont
@@ -12,6 +12,7 @@ from ..core.state_manager import ProjectStateManager
 from ..core.json_parser import KworkJSONParser
 from ..core.monitor import MonitoringService
 from ..services.notification import NotificationService
+from .project_card import ProjectCard
 
 
 class MainWindow(QMainWindow):
@@ -27,6 +28,7 @@ class MainWindow(QMainWindow):
             notification_enabled=self.config.notification_enabled
         )
         self.monitor_service = None
+        self.current_projects = []  # Список всех текущих проектов для обновления
         self.init_ui()
 
     def init_ui(self):
@@ -75,21 +77,26 @@ class MainWindow(QMainWindow):
         projects_label.setFont(font)
         main_layout.addWidget(projects_label)
 
-        self.projects_list = QListWidget()
-        self.projects_list.setStyleSheet("""
-            QListWidget {
+        # Scroll area для карточек проектов
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("""
+            QScrollArea {
                 border: 1px solid #ccc;
                 border-radius: 4px;
-            }
-            QListWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #eee;
-            }
-            QListWidget::item:hover {
-                background-color: #f5f5f5;
+                background-color: #fafafa;
             }
         """)
-        main_layout.addWidget(self.projects_list)
+
+        # Контейнер для карточек
+        self.projects_container = QWidget()
+        self.projects_layout = QVBoxLayout(self.projects_container)
+        self.projects_layout.setContentsMargins(4, 4, 4, 4)
+        self.projects_layout.setSpacing(4)
+        self.projects_layout.addStretch()
+
+        scroll.setWidget(self.projects_container)
+        main_layout.addWidget(scroll)
 
         self.footer_label = QLabel(f"Интервал: {self.config.monitoring_interval}с | Последняя проверка: -")
         self.footer_label.setStyleSheet("color: #666; font-size: 11px;")
@@ -130,6 +137,7 @@ class MainWindow(QMainWindow):
         self.monitor_service.new_projects_found.connect(self.on_new_projects)
         self.monitor_service.error_occurred.connect(self.on_error)
         self.monitor_service.status_updated.connect(self.on_status_update)
+        self.monitor_service.all_projects_updated.connect(self.on_all_projects_updated)
 
         self.monitor_service.start()
         self.start_btn.setText("⏸ Stop")
@@ -146,34 +154,24 @@ class MainWindow(QMainWindow):
 
     def on_new_projects(self, projects: List[Project]):
         for project in projects:
-            item = QListWidgetItem()
+            # Создаем карточку проекта
+            card = ProjectCard(project)
 
-            title_line = f"• {project.title}"
-            price_time = []
-            if project.price:
-                price_time.append(project.price)
+            # Вставляем в начало списка (перед stretch)
+            self.projects_layout.insertWidget(0, card)
 
-            minutes_ago = (QDateTime.currentDateTime().toSecsSinceEpoch() -
-                          int(project.timestamp.timestamp())) // 60
-            if minutes_ago < 1:
-                price_time.append("только что")
-            elif minutes_ago < 60:
-                price_time.append(f"{minutes_ago} мин назад")
-            else:
-                hours = minutes_ago // 60
-                price_time.append(f"{hours} ч назад")
-
-            detail_line = " | ".join(price_time)
-            text = f"{title_line}\n{detail_line}"
-
-            item.setText(text)
-            self.projects_list.insertItem(0, item)
-
-        while self.projects_list.count() > 15:
-            self.projects_list.takeItem(self.projects_list.count() - 1)
+        # Ограничиваем количество карточек до 15
+        while self.projects_layout.count() > 16:  # 15 карточек + 1 stretch
+            item = self.projects_layout.takeAt(15)
+            if item.widget():
+                item.widget().deleteLater()
 
     def on_error(self, error_msg: str):
         self.status_label.setText(f"Status: ⚠ {error_msg}")
+
+    def on_all_projects_updated(self, projects: List[Project]):
+        """Обновляет список всех текущих проектов"""
+        self.current_projects = projects
 
     def on_status_update(self, status: str):
         self.status_label.setText(f"Status: {status}")
@@ -181,6 +179,9 @@ class MainWindow(QMainWindow):
         self.footer_label.setText(
             f"Интервал: {self.config.monitoring_interval}с | Последняя проверка: {current_time}"
         )
+
+        # Обновляем время и данные на всех карточках
+        self._update_all_cards()
 
     def open_settings(self):
         from .settings_dialog import SettingsDialog
@@ -200,3 +201,20 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         self.stop_monitoring()
         event.accept()
+
+    def _update_all_cards(self):
+        """Обновляет отображение времени и данных на всех карточках проектов"""
+        for i in range(self.projects_layout.count()):
+            item = self.projects_layout.itemAt(i)
+            if item and item.widget() and isinstance(item.widget(), ProjectCard):
+                card = item.widget()
+                # Ищем обновленные данные для этого проекта
+                updated_project = next(
+                    (p for p in self.current_projects if p.id == card.project.id),
+                    None
+                )
+                if updated_project:
+                    card.update_project_data(updated_project)
+                else:
+                    # Если проект не найден в текущих, просто обновляем время
+                    card.update_time()
