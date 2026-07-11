@@ -1,0 +1,2 @@
+# Placeholder for notification sound
+# Using Windows system beep as fallback since wav generation requires external tools

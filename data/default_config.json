@@ -1,0 +1,21 @@
+{
+  "url": "",
+  "monitoring_interval": 20,
+  "custom_headers": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8"
+  },
+  "selectors": {
+    "card_container": ".want-card",
+    "title_link": ".wants-card__header-title a",
+    "price": ".wants-card__price",
+    "description": ".wants-card__description-text"
+  },
+  "notification_enabled": true,
+  "sound_enabled": true,
+  "sound_file": "assets/notification.wav",
+  "retention_hours": 24,
+  "max_retries": 3,
+  "timeout": 10
+}
