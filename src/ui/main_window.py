@@ -35,22 +35,69 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Kwork Monitor")
         self.setMinimumSize(700, 500)
 
+        # Применяем темную тему
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #0A0E14;
+            }
+            QWidget {
+                background-color: #0A0E14;
+                color: #E8E9ED;
+                font-family: 'Inter', 'Segoe UI', sans-serif;
+            }
+            QLabel {
+                color: #E8E9ED;
+            }
+            QLineEdit {
+                background-color: #1A1F2C;
+                color: #E8E9ED;
+                border: none;
+                border-bottom: 2px solid #00D9FF;
+                padding: 8px;
+                font-size: 13px;
+            }
+            QLineEdit:focus {
+                border-bottom: 2px solid #A21CAF;
+                box-shadow: 0 2px 8px rgba(162, 28, 175, 0.3);
+            }
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #7E22CE, stop:1 #6B21A8);
+                color: #FFFFFF;
+                border: 1px solid rgba(162, 28, 175, 0.4);
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: 600;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #A21CAF, stop:1 #7E22CE);
+                box-shadow: 0 4px 12px rgba(162, 28, 175, 0.4);
+            }
+            QPushButton:pressed {
+                background: #581C87;
+            }
+        """)
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(15, 15, 15, 15)
-        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(16)
 
+        # URL input
         url_layout = QHBoxLayout()
         url_label = QLabel("URL")
+        url_label.setStyleSheet("color: #6B7280; font-size: 12px; font-weight: 600;")
         url_label.setFixedWidth(40)
         self.url_input = QLineEdit()
         self.url_input.setPlaceholderText("https://kwork.ru/projects?...")
         self.url_input.setText(self.config.url)
-        self.url_input.setFixedHeight(32)
+        self.url_input.setFixedHeight(40)
 
-        self.settings_btn = QPushButton("⚙")
-        self.settings_btn.setFixedSize(32, 32)
+        self.settings_btn = QPushButton("Settings")
+        self.settings_btn.setFixedSize(100, 40)
         self.settings_btn.clicked.connect(self.open_settings)
 
         url_layout.addWidget(url_label)
@@ -58,23 +105,30 @@ class MainWindow(QMainWindow):
         url_layout.addWidget(self.settings_btn)
         main_layout.addLayout(url_layout)
 
+        # Control buttons
         control_layout = QHBoxLayout()
-        self.start_btn = QPushButton("▶ Start")
-        self.start_btn.setFixedHeight(32)
+        self.start_btn = QPushButton("Start")
+        self.start_btn.setFixedHeight(40)
         self.start_btn.clicked.connect(self.toggle_monitoring)
 
-        self.status_label = QLabel("Status: ⚫ Остановлен")
+        self.status_label = QLabel("Остановлен")
         self.status_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.status_label.setStyleSheet("color: #6B7280; font-size: 13px;")
 
         control_layout.addWidget(self.start_btn)
         control_layout.addStretch()
         control_layout.addWidget(self.status_label)
         main_layout.addLayout(control_layout)
 
-        projects_label = QLabel("Последние проекты (15)")
-        font = QFont()
-        font.setBold(True)
-        projects_label.setFont(font)
+        # Projects section
+        projects_label = QLabel("ПОСЛЕДНИЕ ПРОЕКТЫ")
+        projects_label.setStyleSheet("""
+            color: #6B7280;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding-top: 8px;
+        """)
         main_layout.addWidget(projects_label)
 
         # Scroll area для карточек проектов
@@ -82,24 +136,42 @@ class MainWindow(QMainWindow):
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("""
             QScrollArea {
-                border: 1px solid #ccc;
+                border: none;
+                background-color: #0A0E14;
+            }
+            QScrollBar:vertical {
+                background-color: #1A1F2C;
+                width: 8px;
                 border-radius: 4px;
-                background-color: #fafafa;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #00D9FF;
+                border-radius: 4px;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
             }
         """)
 
         # Контейнер для карточек
         self.projects_container = QWidget()
+        self.projects_container.setStyleSheet("background-color: #0A0E14;")
         self.projects_layout = QVBoxLayout(self.projects_container)
-        self.projects_layout.setContentsMargins(4, 4, 4, 4)
-        self.projects_layout.setSpacing(4)
+        self.projects_layout.setContentsMargins(0, 0, 0, 0)
+        self.projects_layout.setSpacing(8)
         self.projects_layout.addStretch()
 
         scroll.setWidget(self.projects_container)
         main_layout.addWidget(scroll)
 
-        self.footer_label = QLabel(f"Интервал: {self.config.monitoring_interval}с | Последняя проверка: -")
-        self.footer_label.setStyleSheet("color: #666; font-size: 11px;")
+        # Footer
+        self.footer_label = QLabel(f"20s | Последняя проверка: —")
+        self.footer_label.setStyleSheet("""
+            color: #6B7280;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            padding-top: 8px;
+        """)
         main_layout.addWidget(self.footer_label)
 
     def toggle_monitoring(self):
@@ -140,8 +212,9 @@ class MainWindow(QMainWindow):
         self.monitor_service.all_projects_updated.connect(self.on_all_projects_updated)
 
         self.monitor_service.start()
-        self.start_btn.setText("⏸ Stop")
-        self.status_label.setText("Status: 🟢 Мониторинг")
+        self.start_btn.setText("Stop")
+        self.status_label.setText("Мониторинг")
+        self.status_label.setStyleSheet("color: #00D9FF; font-size: 13px; font-weight: 600;")
 
     def stop_monitoring(self):
         if self.monitor_service:
@@ -149,13 +222,16 @@ class MainWindow(QMainWindow):
             self.monitor_service.wait()
             self.monitor_service = None
 
-        self.start_btn.setText("▶ Start")
-        self.status_label.setText("Status: ⚫ Остановлен")
+        self.start_btn.setText("Start")
+        self.status_label.setText("Остановлен")
+        self.status_label.setStyleSheet("color: #6B7280; font-size: 13px;")
 
     def on_new_projects(self, projects: List[Project]):
         for project in projects:
             # Создаем карточку проекта
             card = ProjectCard(project)
+            # Подключаем signal для аккордеона
+            card.expanded_changed.connect(self.on_card_expanded)
 
             # Вставляем в начало списка (перед stretch)
             self.projects_layout.insertWidget(0, card)
@@ -167,17 +243,29 @@ class MainWindow(QMainWindow):
                 item.widget().deleteLater()
 
     def on_error(self, error_msg: str):
-        self.status_label.setText(f"Status: ⚠ {error_msg}")
+        self.status_label.setText(f"Ошибка: {error_msg}")
+        self.status_label.setStyleSheet("color: #A21CAF; font-size: 13px; font-weight: 600;")
 
     def on_all_projects_updated(self, projects: List[Project]):
         """Обновляет список всех текущих проектов"""
         self.current_projects = projects
 
+    def on_card_expanded(self, expanded_card):
+        """Закрывает все карточки кроме раскрытой (аккордеон)"""
+        for i in range(self.projects_layout.count()):
+            item = self.projects_layout.itemAt(i)
+            if item and item.widget() and isinstance(item.widget(), ProjectCard):
+                card = item.widget()
+                # Закрываем все карточки, кроме той, которая только что раскрылась
+                if card != expanded_card:
+                    card.collapse()
+
     def on_status_update(self, status: str):
-        self.status_label.setText(f"Status: {status}")
-        current_time = QDateTime.currentDateTime().toString("dd.MM.yyyy HH:mm:ss")
+        self.status_label.setText(status)
+        self.status_label.setStyleSheet("color: #00D9FF; font-size: 13px; font-weight: 600;")
+        current_time = QDateTime.currentDateTime().toString("HH:mm:ss")
         self.footer_label.setText(
-            f"Интервал: {self.config.monitoring_interval}с | Последняя проверка: {current_time}"
+            f"{self.config.monitoring_interval}s | Последняя проверка: {current_time}"
         )
 
         # Обновляем время и данные на всех карточках

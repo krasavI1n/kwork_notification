@@ -1,5 +1,6 @@
 import re
 import json
+import html
 from typing import List, Optional
 from ..models.project import Project
 
@@ -73,6 +74,10 @@ class KworkJSONParser:
                 project_id = str(item.get('id') or item.get('project_id') or item.get('want_id', ''))
                 title = item.get('title') or item.get('name', '')
 
+                # Декодируем HTML entities в заголовке
+                if title:
+                    title = html.unescape(title)
+
                 if not project_id or not title:
                     continue
 
@@ -87,6 +92,9 @@ class KworkJSONParser:
 
                 # Описание (полное и короткое)
                 full_description = item.get('description') or item.get('desc', '')
+                # Декодируем HTML entities в описании
+                if full_description:
+                    full_description = html.unescape(full_description)
                 description = full_description[:100] + '...' if len(full_description) > 100 else full_description
 
                 # Информация о заказчике
