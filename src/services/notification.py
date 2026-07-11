@@ -11,16 +11,16 @@ class NotificationService:
         self.notification_enabled = notification_enabled
         self.last_notification_time = 0
         self.min_notification_interval = 3
-        self._toast_available = False
+        self._notification_available = False
 
         if notification_enabled:
             try:
-                from win10toast import ToastNotifier
-                self.toaster = ToastNotifier()
-                self._toast_available = True
+                from plyer import notification
+                self.notification = notification
+                self._notification_available = True
             except ImportError:
-                print("win10toast не установлен, desktop уведомления отключены")
-                self._toast_available = False
+                print("plyer не установлен, desktop уведомления отключены")
+                self._notification_available = False
 
     def notify_new_projects(self, projects: List[Project]):
         if not projects:
@@ -42,13 +42,13 @@ class NotificationService:
             if len(projects) > 3:
                 message += f"\n...и еще {len(projects) - 3}"
 
-        if self.notification_enabled and self._toast_available:
+        if self.notification_enabled and self._notification_available:
             try:
-                self.toaster.show_toast(
-                    title,
-                    message,
-                    duration=5,
-                    threaded=True
+                self.notification.notify(
+                    title=title,
+                    message=message,
+                    app_name="Kwork Monitor",
+                    timeout=5
                 )
             except Exception as e:
                 print(f"Ошибка отображения уведомления: {e}")
@@ -77,4 +77,4 @@ class NotificationService:
         self.sound_enabled = False
 
     def is_available(self) -> bool:
-        return self._toast_available
+        return self._notification_available

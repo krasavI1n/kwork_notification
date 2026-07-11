@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QGraphicsOpacityEffect
 )
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QParallelAnimationGroup
 from PyQt5.QtGui import QFont, QCursor
 from datetime import datetime
 import webbrowser
@@ -16,6 +16,7 @@ class ProjectCard(QFrame):
         super().__init__(parent)
         self.project = project
         self.expanded = False
+        self.animation = None
         self.init_ui()
 
     def init_ui(self):
@@ -28,12 +29,23 @@ class ProjectCard(QFrame):
                 border-radius: 0px;
                 padding: 0px;
             }
-            ProjectCard:hover {
-                background-color: #1F2532;
-                border-left: 3px solid #A21CAF;
-                box-shadow: 0 2px 12px rgba(162, 28, 175, 0.15);
-            }
         """)
+
+        # Эффект при наведении
+        self.default_style = """
+            ProjectCard {
+                background-color: #1A1F2C;
+                border: 1px solid rgba(162, 28, 175, 0.2);
+                border-left: 3px solid #7E22CE;
+            }
+        """
+        self.hover_style = """
+            ProjectCard {
+                background-color: #1F2532;
+                border: 1px solid rgba(162, 28, 175, 0.3);
+                border-left: 3px solid #A21CAF;
+            }
+        """
         self.setCursor(QCursor(Qt.PointingHandCursor))
 
         main_layout = QVBoxLayout(self)
@@ -43,7 +55,7 @@ class ProjectCard(QFrame):
         # Заголовок и время всегда сверху
         title_label = QLabel(self.project.title)
         title_label.setStyleSheet("""
-            color: #E8E9ED;
+            color: #F5E6D3;
             font-size: 14px;
             font-weight: 600;
             font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -55,7 +67,7 @@ class ProjectCard(QFrame):
         # Время назад (сохраняем ссылку для обновления)
         self.time_label = QLabel(self._calculate_time_ago())
         self.time_label.setStyleSheet("""
-            color: #6B7280;
+            color: #9CA3AF;
             font-size: 11px;
             font-family: 'JetBrains Mono', 'Consolas', monospace;
             background-color: transparent;
@@ -65,7 +77,7 @@ class ProjectCard(QFrame):
         # Разделитель
         line = QLabel()
         line.setFixedHeight(1)
-        line.setStyleSheet("background-color: rgba(107, 114, 128, 0.2); margin-top: 4px;")
+        line.setStyleSheet("background-color: rgba(162, 28, 175, 0.3); margin-top: 4px;")
         main_layout.addWidget(line)
 
         # Развернутая версия (скрыта по умолчанию)
@@ -73,8 +85,20 @@ class ProjectCard(QFrame):
         self.expanded_widget.hide()
         main_layout.addWidget(self.expanded_widget)
 
-        # Клик по карточке для раскрытия
-        self.mousePressEvent = self._on_click
+    def mousePressEvent(self, event):
+        """Обработчик клика - раскрывает/сворачивает карточку"""
+        self.toggle_expanded()
+        super().mousePressEvent(event)
+
+    def enterEvent(self, event):
+        """При наведении мыши"""
+        self.setStyleSheet(self.hover_style)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        """При уходе мыши"""
+        self.setStyleSheet(self.default_style)
+        super().leaveEvent(event)
 
     def _create_expanded_view(self) -> QWidget:
         """Создает развернутое представление с полной информацией"""
@@ -91,7 +115,7 @@ class ProjectCard(QFrame):
             budget_label.setStyleSheet("color: #6B7280; font-size: 12px;")
             budget_value = QLabel(f"до {self.project.price}")
             budget_value.setStyleSheet("""
-                color: #00D9FF;
+                color: #C084FC;
                 font-size: 13px;
                 font-weight: 600;
                 font-family: 'JetBrains Mono', 'Consolas', monospace;
@@ -107,7 +131,7 @@ class ProjectCard(QFrame):
             limit_label.setStyleSheet("color: #6B7280; font-size: 12px;")
             limit_value = QLabel(f"до {self.project.price_limit}")
             limit_value.setStyleSheet("""
-                color: #00D9FF;
+                color: #C084FC;
                 font-size: 13px;
                 font-weight: 600;
                 font-family: 'JetBrains Mono', 'Consolas', monospace;
@@ -132,7 +156,7 @@ class ProjectCard(QFrame):
             desc_text = QLabel(self.project.full_description)
             desc_text.setWordWrap(True)
             desc_text.setStyleSheet("""
-                color: #E8E9ED;
+                color: #F5E6D3;
                 font-size: 12px;
                 padding: 12px;
                 background-color: rgba(126, 34, 206, 0.08);
@@ -154,13 +178,13 @@ class ProjectCard(QFrame):
             payer_layout.addWidget(payer_label)
 
             payer_name = QLabel(f"@{self.project.payer_username}")
-            payer_name.setStyleSheet("color: #E8E9ED; font-size: 13px; font-weight: 600;")
+            payer_name.setStyleSheet("color: #F5E6D3; font-size: 13px; font-weight: 600;")
             payer_layout.addWidget(payer_name)
 
             if self.project.payer_stats:
                 payer_stats_label = QLabel(self.project.payer_stats)
                 payer_stats_label.setStyleSheet("""
-                    color: #6B7280;
+                    color: #9CA3AF;
                     font-size: 11px;
                     font-family: 'JetBrains Mono', 'Consolas', monospace;
                 """)
@@ -180,7 +204,7 @@ class ProjectCard(QFrame):
         if self.project.time_left:
             time_label = QLabel(f"Осталось: {self.project.time_left}")
             time_label.setStyleSheet("""
-                color: #6B7280;
+                color: #9CA3AF;
                 font-size: 11px;
                 font-family: 'JetBrains Mono', 'Consolas', monospace;
             """)
@@ -205,7 +229,7 @@ class ProjectCard(QFrame):
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #7E22CE, stop:1 #6B21A8);
-                color: #FFFFFF;
+                color: #F5E6D3;
                 border: 1px solid rgba(162, 28, 175, 0.4);
                 border-radius: 8px;
                 padding: 10px 20px;
@@ -215,6 +239,7 @@ class ProjectCard(QFrame):
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #A21CAF, stop:1 #7E22CE);
+                border: 1px solid rgba(162, 28, 175, 0.6);
             }
             QPushButton:pressed {
                 background: #581C87;
@@ -246,26 +271,46 @@ class ProjectCard(QFrame):
             days = seconds // 86400
             return f"{days} д назад"
 
-    def _on_click(self, event):
-        """Обработчик клика - раскрывает/сворачивает карточку"""
-        self.toggle_expanded()
-
     def toggle_expanded(self):
-        """Переключает состояние раскрытия"""
+        """Переключает состояние раскрытия с плавной анимацией"""
         self.expanded = not self.expanded
 
         if self.expanded:
+            # Анимация раскрытия
+            self.expanded_widget.setMaximumHeight(0)
             self.expanded_widget.show()
+
+            self.animation = QPropertyAnimation(self.expanded_widget, b"maximumHeight")
+            self.animation.setDuration(300)
+            self.animation.setStartValue(0)
+            self.animation.setEndValue(self.expanded_widget.sizeHint().height())
+            self.animation.setEasingCurve(QEasingCurve.OutCubic)
+            self.animation.start()
+
             # Уведомляем MainWindow, что эта карточка раскрылась
             self.expanded_changed.emit(self)
         else:
-            self.expanded_widget.hide()
+            # Анимация закрытия
+            self.animation = QPropertyAnimation(self.expanded_widget, b"maximumHeight")
+            self.animation.setDuration(250)
+            self.animation.setStartValue(self.expanded_widget.height())
+            self.animation.setEndValue(0)
+            self.animation.setEasingCurve(QEasingCurve.InCubic)
+            self.animation.finished.connect(self.expanded_widget.hide)
+            self.animation.start()
 
     def collapse(self):
-        """Принудительно сворачивает карточку"""
+        """Принудительно сворачивает карточку с анимацией"""
         if self.expanded:
             self.expanded = False
-            self.expanded_widget.hide()
+
+            self.animation = QPropertyAnimation(self.expanded_widget, b"maximumHeight")
+            self.animation.setDuration(250)
+            self.animation.setStartValue(self.expanded_widget.height())
+            self.animation.setEndValue(0)
+            self.animation.setEasingCurve(QEasingCurve.InCubic)
+            self.animation.finished.connect(self.expanded_widget.hide)
+            self.animation.start()
 
     def _open_in_browser(self):
         """Открывает проект в браузере"""

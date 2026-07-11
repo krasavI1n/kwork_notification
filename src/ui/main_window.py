@@ -42,28 +42,27 @@ class MainWindow(QMainWindow):
             }
             QWidget {
                 background-color: #0A0E14;
-                color: #E8E9ED;
+                color: #F5E6D3;
                 font-family: 'Inter', 'Segoe UI', sans-serif;
             }
             QLabel {
-                color: #E8E9ED;
+                color: #F5E6D3;
             }
             QLineEdit {
                 background-color: #1A1F2C;
-                color: #E8E9ED;
+                color: #F5E6D3;
                 border: none;
-                border-bottom: 2px solid #00D9FF;
+                border-bottom: 2px solid #7E22CE;
                 padding: 8px;
                 font-size: 13px;
             }
             QLineEdit:focus {
                 border-bottom: 2px solid #A21CAF;
-                box-shadow: 0 2px 8px rgba(162, 28, 175, 0.3);
             }
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #7E22CE, stop:1 #6B21A8);
-                color: #FFFFFF;
+                color: #F5E6D3;
                 border: 1px solid rgba(162, 28, 175, 0.4);
                 border-radius: 8px;
                 padding: 8px 16px;
@@ -73,7 +72,7 @@ class MainWindow(QMainWindow):
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #A21CAF, stop:1 #7E22CE);
-                box-shadow: 0 4px 12px rgba(162, 28, 175, 0.4);
+                border: 1px solid rgba(162, 28, 175, 0.6);
             }
             QPushButton:pressed {
                 background: #581C87;
@@ -145,7 +144,7 @@ class MainWindow(QMainWindow):
                 border-radius: 4px;
             }
             QScrollBar::handle:vertical {
-                background-color: #00D9FF;
+                background-color: #7E22CE;
                 border-radius: 4px;
             }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
@@ -214,7 +213,7 @@ class MainWindow(QMainWindow):
         self.monitor_service.start()
         self.start_btn.setText("Stop")
         self.status_label.setText("Мониторинг")
-        self.status_label.setStyleSheet("color: #00D9FF; font-size: 13px; font-weight: 600;")
+        self.status_label.setStyleSheet("color: #A21CAF; font-size: 13px; font-weight: 600;")
 
     def stop_monitoring(self):
         if self.monitor_service:
@@ -262,7 +261,7 @@ class MainWindow(QMainWindow):
 
     def on_status_update(self, status: str):
         self.status_label.setText(status)
-        self.status_label.setStyleSheet("color: #00D9FF; font-size: 13px; font-weight: 600;")
+        self.status_label.setStyleSheet("color: #A21CAF; font-size: 13px; font-weight: 600;")
         current_time = QDateTime.currentDateTime().toString("HH:mm:ss")
         self.footer_label.setText(
             f"{self.config.monitoring_interval}s | Последняя проверка: {current_time}"
