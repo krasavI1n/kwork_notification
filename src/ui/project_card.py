@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QGraphicsOpacityEffect
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QParallelAnimationGroup
+from PyQt5.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QParallelAnimationGroup, QSequentialAnimationGroup
 from PyQt5.QtGui import QFont, QCursor
 from datetime import datetime
 import webbrowser
@@ -16,7 +16,7 @@ class ProjectCard(QFrame):
         super().__init__(parent)
         self.project = project
         self.expanded = False
-        self.animation = None
+        self.height_animation = None
         self.init_ui()
 
     def init_ui(self):
@@ -275,42 +275,51 @@ class ProjectCard(QFrame):
         """Переключает состояние раскрытия с плавной анимацией"""
         self.expanded = not self.expanded
 
+        # Останавливаем предыдущую анимацию если она еще работает
+        if self.height_animation and self.height_animation.state() == QPropertyAnimation.Running:
+            self.height_animation.stop()
+
         if self.expanded:
-            # Анимация раскрытия
+            # Показываем виджет и устанавливаем начальную высоту
             self.expanded_widget.setMaximumHeight(0)
             self.expanded_widget.show()
 
-            self.animation = QPropertyAnimation(self.expanded_widget, b"maximumHeight")
-            self.animation.setDuration(300)
-            self.animation.setStartValue(0)
-            self.animation.setEndValue(self.expanded_widget.sizeHint().height())
-            self.animation.setEasingCurve(QEasingCurve.OutCubic)
-            self.animation.start()
+            # Анимация раскрытия - более плавная
+            self.height_animation = QPropertyAnimation(self.expanded_widget, b"maximumHeight", self)
+            self.height_animation.setDuration(400)
+            self.height_animation.setStartValue(0)
+            self.height_animation.setEndValue(self.expanded_widget.sizeHint().height())
+            self.height_animation.setEasingCurve(QEasingCurve.OutCubic)
+            self.height_animation.start()
 
             # Уведомляем MainWindow, что эта карточка раскрылась
             self.expanded_changed.emit(self)
         else:
-            # Анимация закрытия
-            self.animation = QPropertyAnimation(self.expanded_widget, b"maximumHeight")
-            self.animation.setDuration(250)
-            self.animation.setStartValue(self.expanded_widget.height())
-            self.animation.setEndValue(0)
-            self.animation.setEasingCurve(QEasingCurve.InCubic)
-            self.animation.finished.connect(self.expanded_widget.hide)
-            self.animation.start()
+            # Анимация закрытия - такая же плавная
+            self.height_animation = QPropertyAnimation(self.expanded_widget, b"maximumHeight", self)
+            self.height_animation.setDuration(350)
+            self.height_animation.setStartValue(self.expanded_widget.height())
+            self.height_animation.setEndValue(0)
+            self.height_animation.setEasingCurve(QEasingCurve.OutCubic)
+            self.height_animation.finished.connect(self.expanded_widget.hide)
+            self.height_animation.start()
 
     def collapse(self):
         """Принудительно сворачивает карточку с анимацией"""
         if self.expanded:
             self.expanded = False
 
-            self.animation = QPropertyAnimation(self.expanded_widget, b"maximumHeight")
-            self.animation.setDuration(250)
-            self.animation.setStartValue(self.expanded_widget.height())
-            self.animation.setEndValue(0)
-            self.animation.setEasingCurve(QEasingCurve.InCubic)
-            self.animation.finished.connect(self.expanded_widget.hide)
-            self.animation.start()
+            # Останавливаем предыдущую анимацию если она еще работает
+            if self.height_animation and self.height_animation.state() == QPropertyAnimation.Running:
+                self.height_animation.stop()
+
+            self.height_animation = QPropertyAnimation(self.expanded_widget, b"maximumHeight", self)
+            self.height_animation.setDuration(350)
+            self.height_animation.setStartValue(self.expanded_widget.height())
+            self.height_animation.setEndValue(0)
+            self.height_animation.setEasingCurve(QEasingCurve.OutCubic)
+            self.height_animation.finished.connect(self.expanded_widget.hide)
+            self.height_animation.start()
 
     def _open_in_browser(self):
         """Открывает проект в браузере"""

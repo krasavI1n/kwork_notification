@@ -1,5 +1,6 @@
 import time
 import winsound
+import os
 from datetime import datetime
 from typing import List
 from ..models.project import Project
@@ -60,7 +61,13 @@ class NotificationService:
 
     def _play_sound(self):
         try:
-            winsound.MessageBeep(winsound.MB_ICONASTERISK)
+            # Путь к wav файлу
+            sound_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'assets', 'notification.wav')
+            if os.path.exists(sound_path):
+                winsound.PlaySound(sound_path, winsound.SND_FILENAME | winsound.SND_ASYNC)
+            else:
+                # Fallback на системный звук
+                winsound.MessageBeep(winsound.MB_ICONASTERISK)
         except Exception as e:
             print(f"Ошибка воспроизведения звука: {e}")
 

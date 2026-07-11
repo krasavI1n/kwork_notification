@@ -95,6 +95,9 @@ class KworkJSONParser:
                 # Декодируем HTML entities в описании
                 if full_description:
                     full_description = html.unescape(full_description)
+                    # Декодируем Unicode escape последовательности типа [:27a1]
+                    import re
+                    full_description = re.sub(r'\[:([0-9a-fA-F]+)\]', lambda m: chr(int(m.group(1), 16)), full_description)
                 description = full_description[:100] + '...' if len(full_description) > 100 else full_description
 
                 # Информация о заказчике
