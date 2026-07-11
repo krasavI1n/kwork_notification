@@ -80,8 +80,10 @@ class KworkJSONParser:
                 url = f"https://kwork.ru/projects/{project_id}"
 
                 # Цены
-                price = self._extract_price(item, 'price')
-                price_limit = self._extract_price(item, 'priceLimit')
+                # priceLimit - желаемый бюджет
+                # possiblePriceLimit - допустимый бюджет (обычно в 3 раза больше)
+                price = self._extract_price(item, 'priceLimit')
+                price_limit = self._extract_price(item, 'possiblePriceLimit')
 
                 # Описание (полное и короткое)
                 full_description = item.get('description') or item.get('desc', '')
@@ -104,7 +106,8 @@ class KworkJSONParser:
 
                 # Время и предложения
                 time_left = item.get('timeLeftFormatted') or item.get('timeLeft', '')
-                offers_count = item.get('offersCount', 0)
+                # kwork_count - это количество предложений (kwork = предложение на Kwork.ru)
+                offers_count = item.get('kwork_count', 0)
 
                 project = Project(
                     id=project_id,
@@ -129,11 +132,22 @@ class KworkJSONParser:
         return projects
 
     def _extract_price(self, item: dict, field_name: str) -> Optional[str]:
-        """Извлекает цену из указанного поля"""
+        """Извлекает цену из указанного поля с форматированием"""
         if field_name in item and item[field_name]:
             price = item[field_name]
             if isinstance(price, (int, float)):
-                return f"{int(price)} ₽"
+                # Форматируем: 55000 -> "55 000 ₽"
+                price_int = int(price)
+                price_formatted = f"{price_int:,}".replace(',', ' ')
+                return f"{price_formatted} ₽"
             elif isinstance(price, str):
-                return f"{price} ₽"
+                # Если строка, пытаемся преобразовать в число и отформатировать
+                try:
+                    price_float = float(price)
+                    price_int = int(price_float)
+                    price_formatted = f"{price_int:,}".replace(',', ' ')
+                    return f"{price_formatted} ₽"
+                except ValueError:
+                    # Если не число, возвращаем как есть
+                    return f"{price} ₽"
         return None

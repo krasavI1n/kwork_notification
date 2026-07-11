@@ -1,5 +1,6 @@
 data/config.json
 data/state.json
+debug_parser.log
 __pycache__/
 *.pyc
 *.pyo

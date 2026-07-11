@@ -89,7 +89,7 @@ class ProjectCard(QFrame):
             budget_layout = QHBoxLayout()
             budget_label = QLabel("Желаемый бюджет:")
             budget_label.setStyleSheet("font-weight: bold;")
-            budget_value = QLabel(self.project.price)
+            budget_value = QLabel(f"до {self.project.price}")
             budget_layout.addWidget(budget_label)
             budget_layout.addWidget(budget_value)
             budget_layout.addStretch()
@@ -97,9 +97,9 @@ class ProjectCard(QFrame):
 
         if self.project.price_limit:
             limit_layout = QHBoxLayout()
-            limit_label = QLabel("Допустимый бюджет:")
+            limit_label = QLabel("Допустимый:")
             limit_label.setStyleSheet("font-weight: bold;")
-            limit_value = QLabel(self.project.price_limit)
+            limit_value = QLabel(f"до {self.project.price_limit}")
             limit_layout.addWidget(limit_label)
             limit_layout.addWidget(limit_value)
             limit_layout.addStretch()
