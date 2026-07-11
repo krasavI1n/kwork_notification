@@ -9,7 +9,7 @@ from ..models.project import Project
 from ..models.config import Config
 from ..services.config import ConfigManager
 from ..core.state_manager import ProjectStateManager
-from ..core.parser import KworkParser
+from ..core.json_parser import KworkJSONParser
 from ..core.monitor import MonitoringService
 from ..services.notification import NotificationService
 
@@ -115,7 +115,7 @@ class MainWindow(QMainWindow):
 
         self.config_manager.save(self.config)
 
-        parser = KworkParser(self.config.selectors)
+        parser = KworkJSONParser()
         self.monitor_service = MonitoringService(
             url=url,
             interval=self.config.monitoring_interval,

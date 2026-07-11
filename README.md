@@ -307,6 +307,8 @@ pip install -r requirements.txt
 
 ## 👨‍💻 Автор
 
+**Nikita Krasavin** (southevil1337@gmail.com)
+
 Создано для фрилансеров, которые хотят быть первыми на новые проекты.
 
 ## ⭐ Поддержка проекта

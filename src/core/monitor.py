@@ -1,9 +1,10 @@
 import time
 import requests
 from PyQt5.QtCore import QThread, pyqtSignal
-from typing import List
+from typing import List, Union
 from ..models.project import Project
 from ..core.parser import KworkParser
+from ..core.json_parser import KworkJSONParser
 from ..core.state_manager import ProjectStateManager
 from ..services.notification import NotificationService
 
@@ -18,7 +19,7 @@ class MonitoringService(QThread):
         url: str,
         interval: int,
         headers: dict,
-        parser: KworkParser,
+        parser: Union[KworkParser, KworkJSONParser],
         state_manager: ProjectStateManager,
         notification_service: NotificationService,
         max_retries: int = 3,
