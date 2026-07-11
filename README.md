@@ -6,7 +6,7 @@
 
 Автоматический мониторинг новых проектов на бирже фриланса [Kwork.ru](https://kwork.ru). Получайте мгновенные уведомления о появлении новых заказов, соответствующих вашим фильтрам.
 
-![Kwork Monitor Screenshot](https://via.placeholder.com/800x500/f5f5f5/333333?text=Kwork+Monitor+Interface)
+![Kwork Monitor Screenshot](./docs/screenshot.png)
 
 ## ✨ Возможности
 
