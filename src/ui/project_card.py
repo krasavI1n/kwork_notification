@@ -47,6 +47,7 @@ class ProjectCard(QFrame):
             font-size: 14px;
             font-weight: 600;
             font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: transparent;
         """)
         title_label.setWordWrap(True)
         main_layout.addWidget(title_label)
@@ -57,6 +58,7 @@ class ProjectCard(QFrame):
             color: #6B7280;
             font-size: 11px;
             font-family: 'JetBrains Mono', 'Consolas', monospace;
+            background-color: transparent;
         """)
         main_layout.addWidget(self.time_label)
 
@@ -166,8 +168,15 @@ class ProjectCard(QFrame):
 
             layout.addLayout(payer_layout)
 
+        # Добавляем растягивающийся spacer перед нижним блоком
+        layout.addStretch()
+
+        # Нижний блок: время/предложения слева, кнопка справа
+        bottom_layout = QHBoxLayout()
+
         # Время и предложения
-        info_layout = QHBoxLayout()
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(4)
         if self.project.time_left:
             time_label = QLabel(f"Осталось: {self.project.time_left}")
             time_label.setStyleSheet("""
@@ -187,13 +196,10 @@ class ProjectCard(QFrame):
             """)
             info_layout.addWidget(offers_label)
 
-        info_layout.addStretch()
-        layout.addLayout(info_layout)
+        bottom_layout.addLayout(info_layout)
+        bottom_layout.addStretch()
 
-        # Кнопка "Перейти к заказу"
-        btn_layout = QHBoxLayout()
-        btn_layout.addStretch()
-
+        # Кнопка "Открыть проект"
         open_btn = QPushButton("Открыть проект")
         open_btn.setStyleSheet("""
             QPushButton {
@@ -215,9 +221,9 @@ class ProjectCard(QFrame):
             }
         """)
         open_btn.clicked.connect(self._open_in_browser)
-        btn_layout.addWidget(open_btn)
+        bottom_layout.addWidget(open_btn)
 
-        layout.addLayout(btn_layout)
+        layout.addLayout(bottom_layout)
 
         return widget
 
